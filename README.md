@@ -1,4 +1,4 @@
-# Quasar App (quasar-app)
+# Octo App (octo-app)
 
 A Quasar Project
 
