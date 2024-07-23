@@ -1,10 +1,17 @@
 <template>
   <q-page class="column items-center justify-evenly">
-    <page-card :title="`SALES ORDER [${record?.id || '--'}]`">
+    <page-card :title="`SALES ORDER [${record?.id || '--'}]`"
+      route-back="/income/sales-orders"
+      :loading="loading"
+    >
       <template v-slot:title>
-        <span>SALES ORDER [{{record?.id || '--'}}]</span>
-        <q-badge v-if="record" color="positive"  :label="record.state" class="ml-2" />
+        <div class="row">
+          SALES ORDER [{{record?.id || '--'}}]
+          <q-space />
+          <q-badge v-if="record" color="positive"  :label="record.state" class="py-1 ml-2" />
+        </div>
       </template>
+
       <q-card class="min-h-80" v-if="record">
         <q-card-section class="flex flex-col md:flex-row gap-4">
           <div class="flex-1 column gap-2">
@@ -56,37 +63,16 @@
               <!-- TAB:ITEMS -->
               <q-tab-panel name="items" class="p-0">
                 <div v-if="record.items" class="flex flex-col gap-2">
-                  <q-card flat v-if="$q.screen.lt.md" >
-                    <q-list dense separator>
-                      <q-item v-for="(item, itemKey) in record.items" :key="itemKey" clickable v-ripple>
-                        <q-item-section side class="text-center">
-                          {{item.quantity}}
-                          <span class="text-caption">{{ item.unit }}</span>
-                        </q-item-section>
-                        <q-item-section>
-                          <div class="w-full ellipsis">
-                            {{ item.name }}
-                            <!-- <div class="row gap-2 text-grey text-caption">
-                              <p>@{{ item.price }}</p>
-                              <div>[sku: {{ item.product?.sku }}]</div>
-                            </div> -->
-                          </div>
-                        </q-item-section>
-                        <q-item-section side>
-                          {{ Number(item.price) * Number(item.quantity) }}
-                        </q-item-section>
-                      </q-item>
-                    </q-list>
-                  </q-card>
-                  <q-markup-table v-else  dense flat square bordered separator="cell">
+                  <order-list-item v-if="$q.screen.lt.md" :list="record.items" />
+                  <q-markup-table v-else  dense flat square separator="vertical" class="q-table--semi-dense">
                     <thead>
                       <tr class="text-uppercase text-grey-8">
                         <th class="text-center w-8">#</th>
-                        <th class="text-center">Name</th>
+                        <th class="text-center w-1/2">Name</th>
                         <th class="text-center">Qty</th>
                         <th class="text-center">Unit</th>
                         <th class="text-center">Price</th>
-                        <th class="text-center">Discount</th>
+                        <th class="text-center">Disc</th>
                         <th class="text-center">Total</th>
                       </tr>
                     </thead>
@@ -99,11 +85,11 @@
                       <tr v-else v-for="(item, itemKey) in record.items" :key="itemKey">
                         <td> {{ itemKey+1 }}</td>
                         <td>{{ item.name }}</td>
-                        <td>{{ item.unit }}</td>
                         <td class="text-right">{{ item.quantity }}</td>
-                        <td class="text-right">{{ item.price }}</td>
-                        <td class="text-right">{{ item.discprice }}</td>
-                        <td class="text-right">{{ SUBITEMS[itemKey] || '-'}}</td>
+                        <td>{{ item.unit }}</td>
+                        <td class="text-right">{{ nominal(item.price) }}</td>
+                        <td class="text-right">{{ nominal(item.discprice) }}</td>
+                        <td class="text-right">{{ nominal(SUBITEMS[itemKey]) || '-'}}</td>
                       </tr>
                     </tbody>
                   </q-markup-table>
@@ -170,29 +156,28 @@
             </q-tab-panels>
           </div>
         </q-card-section>
-        <q-separator />
-        <q-card-section class="p-2">
-          <summary-card
-            :total="String(TOTAL)"
-            :list="[
-              { label: 'Subtotal', value: SUBTOTAL },
-              { label: 'Discount', value: DISCOUNT },
-              { label: 'Total', value: TOTAL },
-            ]"
-          />
-        </q-card-section>
       </q-card>
-      <template v-slot:actions>
-        <q-btn label="Back" color="primary" @click="link.back()"/>
-        <q-space />
-        <q-btn flat label="Approve" color="positive" @click="setApproved" v-if="record?.state === 'OPEN'"/>
-        <q-btn flat label="Edit" color="primary" :to="`/income/sales-orders/${$route.params.id}/edit`" :disable="!Boolean(record?.state === 'OPEN')"/>
-        <q-btn flat label="Delete" color="negative" @click="remove()" :disable="!Boolean(record?.state === 'OPEN')"/>
+      <template v-slot:left-btn-group>
+        <!-- <q-btn label="Change" color="primary" :to="`/income/sales-orders/${$route.params.id}/edit`" />
+        <q-separator vertical color="primary" class="opacity-80" /> -->
+        <q-btn square icon="label_important" color="primary" class="px-2"
+          @click="sheetMenu([
+            { label: 'Change', icon: 'edit', color: 'primary', click: () => $router.push(`/income/sales-orders/${$route.params.id}/edit`), disable:!Boolean(record?.state === 'OPEN') },
+            { label: 'Approve', icon: 'task_alt', color: 'positive', click: setApproved, hide: record?.state !== 'OPEN' },
+            {},
+            { label: 'Remove', icon: 'delete', color: 'negative', click:remove, disable: !Boolean(record?.state === 'OPEN') },
+          ])"
+        />
       </template>
-
-      <q-inner-loading :showing="loading">
-        <q-spinner-gears color="primary" size="50px" />
-      </q-inner-loading>
+      <template v-slot:right-btn-group>
+        <summary-card
+          :list="[
+            { label: 'Subtotal', value: nominal(SUBTOTAL) },
+            { label: 'Discount', value: nominal(DISCOUNT) },
+            { label: 'Total', value: nominal(TOTAL) },
+          ]"
+        />
+      </template>
     </page-card>
   </q-page>
 </template>
@@ -201,12 +186,14 @@
 import PageCard from 'src/components/PageCard.vue';
 import HeaderTitle from 'src/components/HeaderTitle.vue';
 import SummaryCard from 'src/components/SummaryCard.vue';
+import OrderListItem from 'src/components/OrderListItem.vue';
 import { useRecord } from 'src/composables/record';
 import { SalesOrderModel } from 'src/types/sales-order';
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { api } from 'src/boot/axios';
 import { Loading } from 'quasar';
+import { nominal, sheetMenu } from 'src/boot/system';
 
 defineOptions({
   name: 'SalesOrderViewPage',
@@ -216,7 +203,7 @@ const $router = useRouter()
 const tab = ref('items')
 
 const {
-  record, loading, link, onLoad, onDelete, setConfirm,
+  record, loading, onLoad, onDelete, setConfirm,
 } = useRecord<SalesOrderModel['response']>(({
   api: ref( {
     resource: '/api/sales-orders',
@@ -261,9 +248,9 @@ const remove = () => {
 };
 
 
-const SUBITEMS = computed(() => record.value?.items?.map((e) => ((Number(e.price) - Number(e.discprice)) * Number(e.quantity)) ,0) || [])
-const SUBTOTAL = computed(() => record.value?.items?.reduce((sum, e) => sum + (Number(e.price) * Number(e.quantity)) ,0))
-const DISCOUNT = computed(() => record.value?.items?.reduce((sum, e) => sum + (Number(e.discprice)) ,0))
+const SUBITEMS = computed(() => record.value?.items?.map((e) => ((Number(e.price) - Number(e.discprice)) * Number(e.quantity)), 0) || [])
+const SUBTOTAL = computed(() => record.value?.items?.reduce((sum, e) => sum + (Number(e.price) * Number(e.quantity)), 0) || 0)
+const DISCOUNT = computed(() => record.value?.items?.reduce((sum, e) => sum + (Number(e.discprice)), 0) || 0)
 const TOTAL = computed(() => Number(SUBTOTAL.value) - Number(DISCOUNT.value))
 
 </script>

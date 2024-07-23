@@ -1,6 +1,7 @@
 <template>
   <q-btn-dropdown
     v-bind="$attrs"
+    dropdown-icon="more_horiz"
     split
     color="primary"
     :label="primarySelected?.label"

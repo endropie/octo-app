@@ -5,5 +5,8 @@
   "editor.codeActionsOnSave": ["source.fixAll.eslint"],
   "eslint.validate": ["javascript", "javascriptreact", "typescript", "vue"],
   "typescript.tsdk": "node_modules/typescript/lib",
-  "editor.tabSize": 2
+  "editor.tabSize": 2,
+  "[vue]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  }
 }

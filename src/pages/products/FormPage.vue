@@ -7,12 +7,11 @@
             <q-input outlined v-model="record.name" type="text" label="Name" />
             <div class="flex flex-col md:flex-row gap-2">
               <q-input outlined v-model="record.sku" type="text" label="SKU" class="flex-grow"/>
-              <q-select outlined v-model="record.type" :options="['item', 'nonstock', 'service', 'group']" prefix="Type: " class="flex-none" hide-dropdown-icon />
+              <q-select outlined v-model="record.type" :options="['item', 'nonstock', 'service', 'group']" prefix="Type: " class="flex-none prefix-label" hide-dropdown-icon />
             </div>
             <div class="flex flex-col md:flex-row gap-2">
               <select-resource outlined
                 class="flex-grow"
-
                 label="Category"
                 api-url="/api/product-categories"
                 :api-params="{ limit: '*' }"
@@ -20,15 +19,15 @@
                 v-model="record.category"
                 @update:model-value="() => record.category_id = record.category?.id || null"
               />
-              <q-input  outlined v-model="record.unit" prefix="Unit: " class="flex-none" />
+              <q-input  outlined v-model="record.unit" prefix="Unit: " class="flex-none prefix-label" />
             </div>
           </div>
           <div class="flex-1 column gap-2">
-            <q-input outlined v-model="record.sale_price" type="number" label="Sale Price" />
-            <q-input outlined v-model="record.purchase_price" type="number" label="Purchase Price" />
+            <q-number outlined v-model="record.sale_price" :options="{ minimumFractionDigits: 0 }" label="Sale Price" />
+            <q-number outlined v-model="record.purchase_price" :options="{ minimumFractionDigits: 0 }" label="Purchase Price" />
             <div class="flex flex-col md:flex-row gap-2" v-if="record.option">
-              <q-input outlined v-model="record.option.taxsen_income" type="number" prefix="Tax (%): " class="flex-1" />
-              <q-input outlined v-model="record.option.taxsen_service" type="number" prefix="Service Tax (%): " class="flex-1" />
+              <q-input outlined v-model="record.option.taxsen_income" type="number" prefix="Tax (%): " class="flex-1 prefix-label" />
+              <q-input outlined v-model="record.option.taxsen_service" type="number" prefix="Service Tax (%): " class="flex-1 prefix-label" />
             </div>
           </div>
         </q-card-section>

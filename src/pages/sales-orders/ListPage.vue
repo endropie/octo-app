@@ -7,18 +7,20 @@
       v-model:pagination="pagination"
       :loading="loading"
       @request="onRequest"
+      rows-per-page-label="LIMIT"
+      title-class="text-title"
     >
       <template v-slot:top-right>
-        <q-btn dense rounded color="faded" icon="add" :to="`/income/sales-orders/create`"/>
+        <q-btn dense rounded color="primary" icon="add" :to="`/income/sales-orders/create`"/>
       </template>
       <template v-slot:body-cell-id="el">
         <q-td :props="el">
-          <q-btn flat dense color="faded" icon="article" :to="`/income/sales-orders/${el.row.id}`" />
+          <q-btn flat dense color="primary" icon="article" :to="`/income/sales-orders/${el.row.id}`" />
         </q-td>
       </template>
       <template v-slot:body-cell-state="el">
         <q-td :props="el">
-          <q-badge :color="getOrderStateColor(el.value)" :label="el.value" />
+          <q-badge :color="getOrderStateColor(el.value)" :label="el.value" class="py-1" />
         </q-td>
       </template>
     </q-table>
@@ -26,6 +28,7 @@
 </template>
 
 <script lang="ts">
+
 import { QTableColumn, QTableProps } from 'quasar';
 import useTable from 'src/composables/table';
 import { SalesOrderModel } from 'src/types/sales-order';
@@ -56,7 +59,9 @@ const state = reactive({
   ] as QTableColumn<SalesOrderModel['response']>[],
 });
 </script>
+
 <script setup lang="ts">
+
 defineOptions({
   name: 'SalesOrderListPage',
 });

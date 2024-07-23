@@ -7,11 +7,11 @@
     @input-value="onInputValue"
   >
 
-    <template v-for="(item, index) in $slots" :key="index" v-slot:[getSlotIndex(index)]="scope">
-      <slot :name="index" v-bind="scope"></slot>
+    <template v-for="(name) in Object.keys($slots)" v-slot:[getSlotIndex(name)]>
+      <slot :name="name"></slot>
     </template>
 
-    <template v-slot:option="scope" >
+    <template v-slot:option="scope" v-if="!Object.keys($slots).some(name => name === 'option')">
       <q-item v-bind="scope.itemProps">
         <q-item-section avatar v-if="scope.opt.icon">
           <q-icon :name="scope.opt.icon" />
@@ -27,7 +27,7 @@
       </q-item>
     </template>
 
-    <template v-if="useAdd" v-slot:no-option="scope">
+    <template v-slot:no-option="scope" v-if="useAdd && !Object.keys($slots).some(name => name === 'option')">
       <q-item clickable @click="onCreate()" >
         <q-item-section>
           <div class="row justify-center">
@@ -68,7 +68,6 @@ export default defineComponent({
     let forms = ref(false)
     const inputValue = ref(null)
     const filterInput = ref<string | null>(null)
-
 
     onMounted(() => {
         if (props.search !== 'api') onFetch()

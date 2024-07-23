@@ -31,3 +31,21 @@ $faded     : #607d8b;
 .bg-faded {
   background: var(--q-faded) !important;
 }
+
+
+.text-title {
+  color: var(--q-primary);
+  filter: contrast(0.5);
+}
+.bg-title {
+  background: var(--q-primary);
+  backdrop-filter: contrast(0.5);
+}
+
+.body--dark
+  .text-title {
+    filter: contrast(0.5);
+  }
+  .bg-title {
+    backdrop-filter: brightness(0.5);
+  }

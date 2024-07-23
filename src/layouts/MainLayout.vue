@@ -1,39 +1,33 @@
 <template>
   <q-layout view="hhh lpR lff">
     <q-header elevated>
-      <q-toolbar>
+      <q-toolbar :style="{ backgroundColor: `var(${$q.dark.isActive ? '--q-dark' : '--q-primary'})` }">
         <q-btn
           flat
           dense
           round
-          icon="menu"
-          aria-label="Menu"
-          @click="toggleLeftDrawer"
+          icon="warehouse"
+          aria-label="Company"
+          @click="leftDrawer = true"
         />
 
         <q-toolbar-title>
-          AYO[ms]
+          ABeCe Corporation
         </q-toolbar-title>
-
-        <div>Quasar v{{ $q.version }}</div>
+        <q-badge v-if="$q.screen.gt.sm" color="secondary" :label="`AYO[ms] v ${$q.version}`" class="py-2" />
+        <account-setting class="ml-2" />
       </q-toolbar>
     </q-header>
 
     <q-drawer
-      v-model="leftDrawerOpen"
+      v-model="leftDrawer"
       :mini="miniState"
-      @mouseover="miniState = false"
-      @mouseout="miniState = true"
       mini-to-overlay
       :width="300"
-      :breakpoint="500"
-      show-if-above
+      :breakpoint="768"
       bordered
-      class="column"
     >
-      <main-menu class="" />
-      <q-space />
-      <action-queue class="" />
+      <main-menu></main-menu>
     </q-drawer>
 
     <q-page-container>
@@ -44,18 +38,14 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import AccountSetting from 'components/AccountSetting.vue';
 import MainMenu from 'components/MainMenu.vue';
-import ActionQueue from 'components/ActionQueue.vue';
 
 defineOptions({
   name: 'MainLayout'
 });
 
 const miniState = ref(true);
+const leftDrawer = ref(false);
 
-const leftDrawerOpen = ref(false);
-
-function toggleLeftDrawer () {
-  leftDrawerOpen.value = !leftDrawerOpen.value;
-}
 </script>

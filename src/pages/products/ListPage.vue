@@ -7,13 +7,15 @@
       v-model:pagination="pagination"
       :loading="loading"
       @request="onRequest"
+      rows-per-page-label="LIMIT"
+      title-class="text-title"
     >
       <template v-slot:top-right>
-        <q-btn dense rounded color="faded" icon="add" :to="`/inventory/products/create`"/>
+        <q-btn dense rounded color="primary" icon="add" :to="`/inventory/products/create`"/>
       </template>
       <template v-slot:body-cell-id="el">
         <q-td :props="el">
-          <q-btn flat dense color="faded" icon="article" :to="`/inventory/products/${el.row.id}`" />
+          <q-btn flat dense color="primary" icon="article" :to="`/inventory/products/${el.row.id}`" />
         </q-td>
       </template>
     </q-table>

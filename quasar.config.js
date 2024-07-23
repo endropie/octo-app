@@ -117,11 +117,12 @@ module.exports = configure(function (/* ctx */) {
 
       // Quasar plugins
       plugins: [
+        'BottomSheet',
+        'Cookies',
         'Dark',
         'Dialog',
-        'Notify',
         'LocalStorage',
-        'Cookies',
+        'Notify',
         'Screen',
       ]
     },

@@ -1,7 +1,7 @@
 <template>
   <q-page padding>
-    <page-card :title="`SALES ORDER ${getTitleMode()} - FORM`">
-      <q-card class="min-h-80" v-if="record">
+    <page-card :title="`SALES ORDER ${getTitleMode()} - FORM`" :loading="loading">
+      <q-card v-if="record" style="min-height: calc(100vh - 8rem);">
         <q-card-section class="flex flex-col md:flex-row gap-4">
           <div class="flex-1 column gap-2">
             <select-resource
@@ -25,7 +25,7 @@
             <q-input dense outlined v-model="record.number" type="text" label="SO No." />
           </div>
         </q-card-section>
-        <q-card-section :horizontal="!$q.screen.lt.sm">
+        <q-card-section :horizontal="!$q.screen.lt.sm" class="px-0 pt-0">
           <div class="flex-none">
             <q-tabs dense
               v-model="tab"
@@ -37,29 +37,39 @@
               <q-tab name="detail" icon="info_outline" class="bg-grey-3 text-grey-8 text-xs" />
             </q-tabs>
           </div>
-          <div class="flex-1 border border-stone-300 rounded-r-md">
+          <div class="flex-1">
             <q-tab-panels
+              class="border "
               v-model="tab"
               animated
               swipeable
               vertical
               transition-prev="jump-up"
               transition-next="jump-up"
-              style="height: calc(100vh - 360px); min-height: 200px"
+              xxstyle="height: calc(100vh - 360px); min-height: 200px"
             >
               <!-- TAB:ITEMS -->
               <q-tab-panel name="items" class="p-2">
                 <div v-if="record.items" class="flex flex-col gap-2">
                   <select-resource dense outlined
-                    prefix="Select Product: "
+                    class="prefix-label"
                     search="api"
                     api-url="/api/products"
                     :option-label="(e: any) => `${e.name} [${e.unit}]`"
                     v-model="selectProduct"
                     @update:model-value="setFormItem()"
                     hide-selected
+                  >
+                  <template v-slot:prepend>
+                    <q-icon name="search" />
+                  </template>
+                </select-resource>
+                  <order-list-item v-if="$q.screen.lt.md"
+                    :list="record.items"
+                    clickable
+                    @item-clickable="(x) => setFormItem(x)"
                   />
-                  <q-markup-table dense flat square bordered separator="cell">
+                  <q-markup-table v-else dense flat square bordered separator="cell" class="q-table--semi-dense">
                     <thead>
                       <tr class="text-uppercase text-grey-8">
                         <th class="text-center w-8">#</th>
@@ -85,9 +95,9 @@
                         <td>{{ item.name }}</td>
                         <td>{{ item.unit }}</td>
                         <td class="text-right">{{ item.quantity }}</td>
-                        <td class="text-right">{{ item.price }}</td>
-                        <td class="text-right">{{ item.discprice }}</td>
-                        <td class="text-right">{{ SUBITEMS[itemKey] || '-'}}</td>
+                        <td class="text-right">{{ nominal(item.price) }}</td>
+                        <td class="text-right">{{ nominal(item.discprice) }}</td>
+                        <td class="text-right">{{ nominal(SUBITEMS[itemKey]) }}</td>
                       </tr>
                     </tbody>
                   </q-markup-table>
@@ -157,55 +167,51 @@
             </q-tab-panels>
           </div>
         </q-card-section>
-        <q-card-section>
-          <summary-card class="mb-5"
-              :list="[
-                { label: 'Subtotal', value: SUBTOTAL },
-                { label: 'Discount', value: DISCOUNT },
-                { label: 'Total', value: TOTAL },
-              ]"
-            />
-        </q-card-section>
       </q-card>
-      <template v-slot:actions>
-        <q-btn label="Back" color="primary" @click="link.back()"/>
-        <q-space />
+      <template v-slot:left-btn-group>
+        <template v-if="!$q.screen.lt.sm">
+          <q-btn label="Back" color="primary" @click="link.back()" />
+          <q-separator vertical color="primary" class="opacity-80" />
+        </template>
         <btn-drop-once
           v-model:primary="primarySaving"
+          left-more
           :data="[
             { name: 'save', label: 'Save', click: save },
             { name: 'save-new', label: 'Save & New', click: saveNew },
           ]"
         />
       </template>
-
-      <q-inner-loading :showing="loading">
-        <q-spinner-gears color="primary" size="50px" />
-      </q-inner-loading>
+      <template v-slot:right-btn-group>
+        <summary-card
+            :list="[
+              { label: 'Subtotal', value: nominal(SUBTOTAL) },
+              { label: 'Discount', value: nominal(DISCOUNT) },
+              { label: 'Total Summary', value: nominal(TOTAL) },
+            ]"
+          />
+      </template>
     </page-card>
   </q-page>
 
-  <q-dialog persistent :maximized="$q.screen.lt.sm"
+  <q-dialog persistent :position="$q.screen.lt.sm ? 'bottom' : 'standard'"
     :model-value="Boolean(keyFormItem !== null)"
     @hide="unsetForm()"
   >
     <q-card v-if="recordItem" class="min-w-80">
-      <q-bar dark class="bg-primary text-white">
-        <div class="col text-center text-weight-bold">
+      <q-linear-progress :value="1" color="primary" />
+      <q-bar dark>
+        <q-toolbar-title class="text-xs text-center">
           Product Detail
-        </div>
-        <q-btn dense flat round icon="clear" size="8.5px" v-close-popup />
+        </q-toolbar-title>
       </q-bar>
+      <q-separator inset />
       <q-card-section class="grid grid-cols-4 gap-2">
-        <div class="pt-3">SKU</div>
-        <q-input dense outlined  readonly
-          class="col-span-3"
-          :model-value="recordItem.product.sku"
-        />
         <div class="pt-3">Name</div>
         <q-input dense outlined
           class="col-span-3"
           v-model="recordItem.name"
+          :hint="`SKU: ${recordItem.product.sku}`"
         />
         <div class="pt-3">Qty</div>
         <div class="col-span-3 flex flex-row justify-end">
@@ -215,23 +221,23 @@
             type="number"
             v-model="recordItem.quantity"
           >
-            <template v-slot:append>
+            <template v-slot:after>
               <span class="text-sm text-bold">{{ recordItem.unit }}</span>
             </template>
           </q-input>
         </div>
         <div class="pt-3">Price</div>
-        <q-input dense outlined
-          class="col-span-3"
-          input-class="text-right"
+        <q-number dense outlined
+          :options="{ minimumFractionDigits: 0 }"
+          class="col-span-3 align-right"
           type="number"
           v-model="recordItem.price"
           @update:model-value="setItemDisc(recordItem)"
         />
         <div class="pt-3">Disc</div>
-        <q-input dense outlined
-          class="col-span-3"
-          input-class="text-right"
+        <q-number dense outlined
+          :options="{ minimumFractionDigits: 0 }"
+          class="col-span-3 align-right"
           type="number"
           v-model="recordItem.discprice"
           @update:model-value="() => {
@@ -240,23 +246,26 @@
         >
           <template v-slot:before v-if="recordItem.option">
             <q-input dense outlined
-            class="col-span-3"
-            input-class="w-16 text-right"
-            suffix=" %"
-            type="number" max="99"
-            v-model="recordItem.option.discprice_sen"
-            @update:model-value="setItemDisc(recordItem)"
+              class="col-span-3"
+              input-class="w-16 text-right"
+              suffix=" %"
+              type="number" :maxlength="2"
+              v-model="recordItem.option.discprice_sen"
+              @update:model-value="setItemDisc(recordItem)"
             />
           </template>
-        </q-input>
+        </q-number>
         <div class="pt-3">Total Price</div>
-        <q-input dense outlined readonly
-          class="col-span-3"
-          input-class="text-right"
+        <q-number dense outlined readonly
+          :options="{ minimumFractionDigits: 0 }"
+          class="col-span-3 align-right"
           :model-value="Number(recordItem.quantity) * (Number(recordItem.price) - Number(recordItem.discprice))"
         />
       </q-card-section>
+      <q-separator inset />
       <q-card-actions align="right">
+        <q-btn flat label="Delete" color="negative" @click="removeItem(Number(keyFormItem))" />
+        <q-space />
         <q-btn flat label="Cancel" color="primary" v-close-popup />
         <q-btn flat label="Submit" color="primary" :disable="!FORMDETAIL_ALLOWED" @click="setItem()" />
       </q-card-actions>
@@ -267,9 +276,11 @@
 <script lang="ts">
 
 import { reactiveStore } from 'src/composables/utils';
-import { Dialog } from 'quasar';
+import { Dialog, Notify } from 'quasar';
 import DialogLoading from 'src/components/DialogLoading.vue';
 import SummaryCard from 'src/components/SummaryCard.vue';
+import OrderListItem from 'src/components/OrderListItem.vue';
+import { nominal } from 'src/boot/system';
 const state = reactiveStore('sales-order-form', {
   primarySaving: null as string | null
 })
@@ -284,7 +295,7 @@ import { useRecord } from 'src/composables/record';
 import { SalesOrderItemModel, SalesOrderModel } from 'src/types/sales-order';
 import { QueueRaw, QueueResponse } from 'src/types/resource';
 import { computed, onMounted, ref, toRefs } from 'vue';
-import { useRouter } from 'vue-router';
+import { onBeforeRouteUpdate, useRouter } from 'vue-router';
 
 defineOptions({
   name: 'SalesOrderFormPage',
@@ -370,7 +381,9 @@ const newCustInfo = () => JSON.parse(JSON.stringify({
 // onUpdated(() => {
 //   onLoad()
 // })
-
+onBeforeRouteUpdate(() => {
+  onLoad()
+})
 onMounted(() => {
   onLoad(() => {
     // statement code here...
@@ -450,18 +463,40 @@ const setFormItem = (key = -1) => {
 
 const setItem = () => {
   if (record.value?.items && recordItem.value && keyFormItem.value !== null) {
-    const v = JSON.parse(JSON.stringify(recordItem.value))
-    if (keyFormItem.value >= 0) {
-      record.value.items[keyFormItem.value] = v;
-    }
-    else record.value.items.push(v);
 
-    unsetForm()
+    if (Number(recordItem.value.price) < Number(recordItem.value.discprice)) {
+      Notify.create('Discount Price invalid!');
+    } else {
+      const v = JSON.parse(JSON.stringify(recordItem.value))
+      if (keyFormItem.value >= 0) {
+        record.value.items[keyFormItem.value] = v;
+      }
+      else record.value.items.push(v);
+
+      unsetForm()
+    }
   }
 }
 
 const setItemDisc = (item: SalesOrderItemModel['attrs']) => {
   if (item.option) item.discprice = Number(item.option.discprice_sen) / 100 * Number(item.price)
+}
+
+const removeItem = (index: number) => {
+  Dialog.create({
+    title: 'Confirmation',
+    message: 'Are you sure to remove item ?',
+    ok: true,
+    cancel: {
+      color: 'negative'
+    }
+  })
+  .onOk(() => {
+    if (record.value?.items?.length) {
+      record.value.items.splice(index, 1)
+      unsetForm()
+    }
+  })
 }
 
 const unsetForm = () => {
@@ -479,7 +514,7 @@ const FORMDETAIL_ALLOWED = computed(() => {
 })
 const SUBITEMS = computed(() => record.value?.items?.map((e) => ((Number(e.price) - Number(e.discprice)) * Number(e.quantity)) ,0) || [])
 const SUBTOTAL = computed(() => record.value?.items?.reduce((sum, e) => sum + (Number(e.price) * Number(e.quantity)) ,0))
-const DISCOUNT = computed(() => record.value?.items?.reduce((sum, e) => sum + (Number(e.discprice)) ,0))
+const DISCOUNT = computed(() => record.value?.items?.reduce((sum, e) => sum + (Number(e.quantity) * Number(e.discprice)) ,0))
 const TOTAL = computed(() => Number(SUBTOTAL.value) - Number(DISCOUNT.value))
 
 </script>

@@ -7,7 +7,7 @@
             <q-input readonly outlined v-model="record.name" type="text" label="Name" />
             <div class="flex flex-col md:flex-row gap-2">
               <q-input readonly outlined v-model="record.sku" type="text" label="SKU" class="flex-grow"/>
-              <q-select readonly outlined v-model="record.type" :options="['item', 'nonstock', 'service', 'group']" prefix="Type: " class="flex-none" hide-dropdown-icon />
+              <q-select readonly outlined v-model="record.type" :options="['item', 'nonstock', 'service', 'group']" prefix="Type: " class="flex-none prefix-label" hide-dropdown-icon />
             </div>
             <div class="flex flex-col md:flex-row gap-2">
               <q-input readonly outlined
@@ -16,15 +16,15 @@
                 label="Category"
                 :model-value="record.category?.name || '--'"
               />
-              <q-input readonly outlined v-model="record.unit" prefix="Unit: " class="flex-none" />
+              <q-input readonly outlined v-model="record.unit" prefix="Unit: " class="flex-none prefix-label" />
             </div>
           </div>
           <div class="flex-1 column gap-2">
             <q-input readonly outlined v-model="record.sale_price" type="number" label="Sale Price" />
             <q-input readonly outlined v-model="record.purchase_price" type="number" label="Purchase Price" />
             <div class="flex flex-col md:flex-row gap-2" v-if="record.option">
-              <q-input readonly outlined v-model="record.option.taxsen_income" type="number" prefix="Tax (%): " class="flex-1" />
-              <q-input readonly outlined v-model="record.option.taxsen_service" type="number" prefix="Service Tax (%): " class="flex-1" />
+              <q-input readonly outlined v-model="record.option.taxsen_income" type="number" prefix="Tax (%): " class="flex-1 prefix-label" />
+              <q-input readonly outlined v-model="record.option.taxsen_service" type="number" prefix="Service Tax (%): " class="flex-1 prefix-label" />
             </div>
           </div>
         </q-card-section>

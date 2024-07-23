@@ -5,3 +5,32 @@ input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
+
+.prefix-label.q-input .q-field__prefix {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.align-right.q-number input.q-field__input {
+  text-align: right;
+}
+.align-center.q-number input.q-field__input {
+  text-align: center;
+}
+
+.text-xxs {
+  font-size: 0.60rem;
+  line-height: 0.8rem;
+}
+
+.q-table--semi-dense .q-table thead tr, .q-table--semi-dense .q-table tbody tr, .q-table--semi-dense .q-table tbody td {
+  height: 36px;
+}
+.q-table--grid .q-table__top {
+  padding-left: 0.4rem;
+  padding-right: 0.4rem;
+}
+
+body.body--dark
+  .prefix-label.q-input .q-field__prefix {
+    color:rgb(188, 188, 188);
+  }

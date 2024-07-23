@@ -35,9 +35,8 @@ export default boot(({ app, router }) => {
   const { list, removeQueueList } = useActionQueue()
 
   echo.channel('app-channel')
-    // .listenToAll()
     .listen('.action', (event: QueueEvent) => {
-      console.warn('socket-action.list', event);
+      console.warn('event-action.list', event);
       const rawIndex = list.value.findIndex(e => e.key = event.key)
       if (rawIndex >= 0) {
         const raw = list.value[rawIndex]
