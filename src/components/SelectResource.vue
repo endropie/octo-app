@@ -1,10 +1,12 @@
 <template>
   <q-select
+    ref="selectResource"
     v-bind="attributes"
     :model-value="$attrs.modelValue"
     :options="opts"
     @filter="onSearch"
     @input-value="onInputValue"
+    @popup-show="selectClicked"
   >
 
     <template v-for="(name) in Object.keys($slots)" v-slot:[getSlotIndex(name)]>
@@ -44,9 +46,9 @@
 </template>
 
 <script lang="ts">
-import { QSelectSlots } from 'quasar'
+import { QSelectSlots, QSelect } from 'quasar'
 import { useSelect } from 'src/composables/select'
-import { defineComponent, onMounted, computed, ref } from 'vue'
+import { defineComponent, computed, ref } from 'vue'
 
 export default defineComponent({
   name: 'SelectResource',
@@ -63,15 +65,24 @@ export default defineComponent({
     }
   },
   setup(props, vm) {
+    const selectResource = ref<QSelect>()
 
     const { onFetch, onApiFilter, onFilter, opts, select } = useSelect(() => ({ props }))
     let forms = ref(false)
     const inputValue = ref(null)
     const filterInput = ref<string | null>(null)
+    const hasLoaded = ref(false)
 
-    onMounted(() => {
-        if (props.search !== 'api') onFetch()
-    });
+    const selectClicked = () => { 
+      console.log('Select Clicked', hasLoaded.value)
+      if (hasLoaded.value === false) {
+        selectResource.value?.filter('')
+      }
+    }
+
+    // onMounted(() => {
+    //     if (props.search !== 'api') onFetch()
+    // });
 
     const attributes = computed(() => ({
       useInput: Boolean(props.search),
@@ -81,10 +92,19 @@ export default defineComponent({
       ...vm.attrs,
     }))
 
+    const onFIlterLoaded = (str: string, cb: CallableFunction) => {
+      if (hasLoaded.value === true ) onFilter(str, cb)
+      else {    
+        hasLoaded.value = true 
+        onFetch(str).finally(() => void cb())
+      } 
+    }
+
 
     return {
       onInputValue: (v: string) => filterInput.value = v,
-      onSearch: props.search === 'api' ? onApiFilter : (Boolean(props.search) ? onFilter : undefined),
+      onSearch: props.search === 'api' ? onApiFilter 
+        : (Boolean(props.search) ? onFIlterLoaded : undefined),
       onCreate: () => {
         forms.value = true
       },
@@ -95,6 +115,7 @@ export default defineComponent({
       },
       getLabel: (scope: unknown) => (scope as { label: string }).label,
       getSlotIndex: (index: unknown) => index as keyof QSelectSlots,
+      selectClicked,      
       attributes,
       select,
       opts,
